@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Advanced Currency Converter</title>
+
+<style>
+:root{
+    --bg:#f4f6f8;
+    --card:#ffffff;
+    --text:#111;
+    --primary:#2563eb;
+}
+body.dark{
+    --bg:#0f172a;
+    --card:#020617;
+    --text:#e5e7eb;
+    --primary:#38bdf8;
+}
+
+body{
+    margin:0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    transition:0.3s;
+}
+
+/* NAVBAR */
+nav{
+    background:var(--primary);
+    padding:14px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:white;
+}
+nav h2{margin:0;}
+nav button{
+    background:white;
+    border:none;
+    padding:6px 12px;
+    border-radius:4px;
+    cursor:pointer;
+}
+
+/* CONTAINER */
+.container{
+    max-width:520px;
+    margin:80px auto;
+    background:var(--card);
+    padding:30px;
+    border-radius:14px;
+    box-shadow:0 15px 30px rgba(0,0,0,0.15);
+    animation:fade 0.5s ease;
+}
+@keyframes fade{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+h1{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+/* DROPDOWN */
+.dropdown{
+    position:relative;
+    margin-bottom:15px;
+}
+.select{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border:1px solid #ccc;
+    padding:10px;
+    border-radius:6px;
+    cursor:pointer;
+}
+.select span{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.select img{
+    width:22px;
+}
+.options{
+    display:none;
+    position:absolute;
+    width:100%;
+    max-height:220px;
+    overflow:auto;
+    background:var(--card);
+    border:1px solid #ccc;
+    border-radius:6px;
+    margin-top:4px;
+    z-index:99;
+}
+.options div{
+    padding:10px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+}
+.options div:hover{
+    background:rgba(0,0,0,0.05);
+}
+.options img{
+    width:20px;
+}
+
+/* INPUT */
+input{
+    width:100%;
+    padding:12px;
+    margin:15px 0;
+    font-size:16px;
+}
+
+/* BUTTON */
+button.convert{
+    width:100%;
+    padding:12px;
+    font-size:17px;
+    background:var(--primary);
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+button.convert:hover{
+    opacity:0.9;
+}
+
+/* RESULT */
+#result{
+    margin-top:20px;
+    font-size:18px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+    <h2>💱 Currency Converter</h2>
+    <button onclick="toggleTheme()">🌙</button>
+</nav>
+
+<div class="container">
+<h1>Convert Currency</h1>
+
+<div class="dropdown" id="fromBox"></div>
+<div class="dropdown" id="toBox"></div>
+
+<input type="number" id="amount" value="1">
+
+<button class="convert" onclick="convert()">Convert</button>
+
+<div id="result"></div>
+</div>
+
+<script>
+const currencies = {
+ USD:"us", EUR:"eu", GBP:"gb", PKR:"pk", INR:"in",
+ SAR:"sa", AED:"ae", KWD:"kw", QAR:"qa",
+ JPY:"jp", CNY:"cn", CHF:"ch", AUD:"au",
+ CAD:"ca", TRY:"tr", RUB:"ru", ZAR:"za"
+};
+
+let from="USD", to="PKR";
+
+function dropdown(container,idDefault,setter){
+    const box=document.getElementById(container);
+    const sel=document.createElement("div");
+    sel.className="select";
+    sel.innerHTML=`<span><img src="https://flagcdn.com/w20/${currencies[idDefault]}.png">${idDefault}</span> ▼`;
+
+    const list=document.createElement("div");
+    list.className="options";
+
+    for(let c in currencies){
+        const item=document.createElement("div");
+        item.innerHTML=`<img src="https://flagcdn.com/w20/${currencies[c]}.png">${c}`;
+        item.onclick=()=>{
+            sel.innerHTML=`<span><img src="https://flagcdn.com/w20/${currencies[c]}.png">${c}</span> ▼`;
+            list.style.display="none";
+            setter(c);
+        };
+        list.appendChild(item);
+    }
+
+    sel.onclick=()=> list.style.display=list.style.display==="block"?"none":"block";
+    box.appendChild(sel);
+    box.appendChild(list);
+}
+
+dropdown("fromBox","USD",v=>from=v);
+dropdown("toBox","PKR",v=>to=v);
+
+function convert(){
+    const amount=document.getElementById("amount").value;
+    const res=document.getElementById("result");
+
+    fetch(`/convert?from=${from}&to=${to}&amount=${amount}`)
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.error){
+            res.innerHTML="❌ "+d.error;
+        }else{
+            res.innerHTML=`✅ <b>${d.amount} ${d.from}</b> = <b>${d.converted_amount} ${d.to}</b>`;
+        }
+    })
+    .catch(()=> res.innerHTML="❌ Backend not running");
+}
+
+function toggleTheme(){
+    document.body.classList.toggle("dark");
+}
+</script>
+
+</body>
+</html>
